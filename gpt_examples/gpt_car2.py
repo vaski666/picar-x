@@ -218,6 +218,7 @@ def main():
     global speech_loaded
     global action_status, actions_to_be_done
     global tts_file
+    global stt_text
 
     my_car.reset()
     my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT)
@@ -265,8 +266,8 @@ def main():
             with action_lock:
                 action_status = 'standby'
             st = time.time()
-            _result = stt_text(f'\033[1;30m{"intput: "}\033[0m').encode(sys.stdin.encoding).decode('utf-8')
-
+            _result = stt_text
+            
             if _result == False or _result == "":
                 print() # new line
                 continue
