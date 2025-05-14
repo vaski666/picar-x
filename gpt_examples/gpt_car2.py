@@ -271,9 +271,11 @@ def main():
     while True:
         if input_mode == 'voice':
             my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT)
+            print("Checking for new MQTT message...") # Added debug print
             # print("waiting for mqtt message ...") # No longer printing here
 
             with mqtt_lock:
+                print(f"Inside mqtt_lock - new_mqtt_message: {new_mqtt_message}, stt_text: {stt_text}") # Added debug print
                 if new_mqtt_message and stt_text:
                     _result = stt_text
                     new_mqtt_message = False # Reset the flag
