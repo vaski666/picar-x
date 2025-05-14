@@ -270,6 +270,10 @@ def main():
                         _result = stt_text
                         new_mqtt_message = False # Reset the flag
 
+                        if _result.lower() == "unavailable": # Check for "unavailable" message
+                            print("Received 'unavailable' message, ignoring.")
+                            continue # Skip the rest of the processing for this message
+
                         print(f"Processing MQTT message: {_result}")
 
                         # chat-gpt
@@ -286,8 +290,6 @@ def main():
                             response = openai_helper.dialogue_with_img(_result, img_path)
                         else:
                             response = openai_helper.dialogue(_result)
-
-                        print(f"OpenAI Response: {response}") # Added print statement
 
                         gray_print(f'chat takes: {time.time() - st:.3f} s')
 
