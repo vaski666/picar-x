@@ -264,21 +264,38 @@ def main():
         try:
             if input_mode == 'voice':
                 my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT)
-                # print("Checking for new MQTT message...") # Commented out debug print
 
                 with mqtt_lock:
-                    # print(f"Inside mqtt_lock - new_mqtt_message: {new_mqtt_message}, stt_text: {stt_text}") # Commented out debug print
                     if new_mqtt_message and stt_text:
                         _result = stt_text
                         new_mqtt_message = False # Reset the flag
 
                         print(f"Processing MQTT message: {_result}")
 
+                        # chat-gpt
+                        # ----------------------------------------------------------------
+                        response = {}
+                        st = time.time()
+
+                        with action_lock:
+                            action_status = 'think'
+
+                        if with_img:
+                            img_path = './img_imput.jpg'
+                            cv2.imwrite(img_path, Vilib.img)
+                            response = openai_helper.dialogue_with_img(_result, img_path)
+                        else:
+                            response = openai_helper.dialogue(_result)
+
+                        print(f"OpenAI Response: {response}") # Added print statement
+
+                        gray_print(f'chat takes: {time.time() - st:.3f} s')
+
                         # actions & TTS
                         # ----------------------------------------------------------------
                         _sound_actions = []
                         try:
-                            if isinstance(response, dict): # Assuming 'response' is defined later
+                            if isinstance(response, dict):
                                 if 'actions' in response:
                                     actions = list(response['actions'])
                                 else:
@@ -380,4 +397,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\033[31mERROR in main execution: {e}\033[m")
     finally:
-        pass        
+        pass
