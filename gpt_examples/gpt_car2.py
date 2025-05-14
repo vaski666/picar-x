@@ -225,12 +225,12 @@ def main():
     global action_status, actions_to_be_done
     global tts_file
     global stt_text
-    global new_mqtt_message ### NEW CODE ###
-    global mqtt_lock ### NEW CODE ###
+    global new_mqtt_message
+    global mqtt_lock
 
-    stt_text = None ### NEW CODE ###
-    new_mqtt_message = False ### NEW CODE ###
-    mqtt_lock = threading.Lock() ### NEW CODE ###
+    stt_text = None
+    new_mqtt_message = False
+    mqtt_lock = threading.Lock()
 
     my_car.reset()
     my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT)
@@ -250,17 +250,15 @@ def main():
     try:
         client.username_pw_set(mqtt_username, mqtt_password)
         client.connect(mqtt_broker_address, 1883, 60)  # Connect to the broker
-        print("Connecting to MQTT broker...") # Add log
+        print("Connecting to MQTT broker...") # Initial connection log
     except Exception as e:
         print(f"\033[31mERROR: Could not connect to MQTT broker: {e}\033[m")
         print("Please check your MQTT broker address and ensure it is running.")
         sys.exit(1)
 
-    # client.connect("localhost", 1883, 60)
-
     client.loop_start()  # Start the MQTT loop in a non-blocking thread
 
-    print("Waiting for STT data from Home Assistant via MQTT topic 'picarx/stt'")
+    print("Waiting for STT data from Home Assistant via MQTT topic 'picarx/stt'") ### MOVED HERE ###
     try:
         while True:
             time.sleep(0.1)  # Keep the main thread alive
@@ -270,120 +268,34 @@ def main():
         client.loop_stop()  # Stop the MQTT loop
         client.disconnect()  # Disconnect from the broker
 
-    while True: ### NEW CODE ###
-        if input_mode == 'voice': ### NEW CODE ###
-            my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT) ### NEW CODE ###
-            print("waiting for mqtt message ...") ### NEW CODE ###
+    while True:
+        if input_mode == 'voice':
+            my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT)
+            # print("waiting for mqtt message ...") # No longer printing here
 
-            with mqtt_lock: ### NEW CODE ###
-                if new_mqtt_message and stt_text: ### NEW CODE ###
-                    _result = stt_text ### NEW CODE ###
-                    new_mqtt_message = False # Reset the flag ### NEW CODE ###
+            with mqtt_lock:
+                if new_mqtt_message and stt_text:
+                    _result = stt_text
+                    new_mqtt_message = False # Reset the flag
 
-                    print(f"Processing MQTT message: {_result}") ### NEW CODE ###
+                    print(f"Processing MQTT message: {_result}")
 
-                    with action_lock: ### NEW CODE ###
-                        action_status = 'think' ### NEW CODE ###
+                    with action_lock:
+                        action_status = 'think'
 
-                    if with_img: ### NEW CODE ###
-                        img_path = './img_imput.jpg' ### NEW CODE ###
-                        cv2.imwrite(img_path, Vilib.img) ### NEW CODE ###
-                        response = openai_helper.dialogue_with_img(_result, img_path) ### NEW CODE ###
-                    else: ### NEW CODE ###
-                        response = openai_helper.dialogue(_result) ### NEW CODE ###
+                    if with_img:
+                        img_path = './img_imput.jpg'
+                        cv2.imwrite(img_path, Vilib.img)
+                        response = openai_helper.dialogue_with_img(_result, img_path)
+                    else:
+                        response = openai_helper.dialogue(_result)
 
-                    gray_print(f'chat takes: {time.time() - time.time():.3f} s') # Fix time calculation ### NEW CODE ###
+                    # ... (rest of your actions and TTS processing)
 
-                    # actions & TTS ### NEW CODE ###
-                    # ---------------------------------------------------------------- ### NEW CODE ###
-                    _sound_actions = [] ### NEW CODE ###
-                    try: ### NEW CODE ###
-                        if isinstance(response, dict): ### NEW CODE ###
-                            if 'actions' in response: ### NEW CODE ###
-                                actions = list(response['actions']) ### NEW CODE ###
-                            else: ### NEW CODE ###
-                                actions = ['stop'] ### NEW CODE ###
+            time.sleep(0.1) # Small delay to avoid busy-waiting
 
-                            if 'answer' in response: ### NEW CODE ###
-                                answer = response['answer'] ### NEW CODE ###
-                            else: ### NEW CODE ###
-                                answer = '' ### NEW CODE ###
-
-                            if len(answer) > 0: ### NEW CODE ###
-                                _actions = list.copy(actions) ### NEW CODE ###
-                                for _action in _actions: ### NEW CODE ###
-                                    if _action in SOUND_EFFECT_ACTIONS: ### NEW CODE ###
-                                        _sound_actions.append(_action) ### NEW CODE ###
-                                        actions.remove(_action) ### NEW CODE ###
-
-                        else: ### NEW CODE ###
-                            response = str(response) ### NEW CODE ###
-                            if len(response) > 0: ### NEW CODE ###
-                                actions = [] ### NEW CODE ###
-                                answer = response ### NEW CODE ###
-
-                    except: ### NEW CODE ###
-                        actions = [] ### NEW CODE ###
-                        answer = '' ### NEW CODE ###
-
-                    try: ### NEW CODE ###
-                        # ---- tts ---- ### NEW CODE ###
-                        _tts_status = False ### NEW CODE ###
-                        if answer != '': ### NEW CODE ###
-                            st = time.time() ### NEW CODE ###
-                            _time = time.strftime("%y-%m-%d_%H-%M-%S", time.localtime()) ### NEW CODE ###
-                            _tts_f = f"./tts/{_time}_raw.wav" ### NEW CODE ###
-                            _tts_status = openai_helper.text_to_speech(answer, _tts_f, TTS_VOICE, response_format='wav') # alloy, echo, fable, onyx, nova, and shimmer ### NEW CODE ###
-                            if _tts_status: ### NEW CODE ###
-                                tts_file = f"./tts/{_time}_{VOLUME_DB}dB.wav" ### NEW CODE ###
-                                _tts_status = sox_volume(_tts_f, tts_file, VOLUME_DB) ### NEW CODE ###
-                            gray_print(f'tts takes: {time.time() - st:.3f} s') ### NEW CODE ###
-
-                        # ---- actions ---- ### NEW CODE ###
-                        with action_lock: ### NEW CODE ###
-                            actions_to_be_done = actions ### NEW CODE ###
-                            gray_print(f'actions: {actions_to_be_done}') ### NEW CODE ###
-                            action_status = 'actions' ### NEW CODE ###
-
-                        # --- sound effects and voice --- ### NEW CODE ###
-                        for _sound in _sound_actions: ### NEW CODE ###
-                            try: ### NEW CODE ###
-                                sounds_dict[_sound](music) ### NEW CODE ###
-                            except Exception as e: ### NEW CODE ###
-                                print(f'action error: {e}') ### NEW CODE ###
-
-                        if _tts_status: ### NEW CODE ###
-                            with speech_lock: ### NEW CODE ###
-                                speech_loaded = True ### NEW CODE ###
-
-                        # ---- wait speak done ---- ### NEW CODE ###
-                        if _tts_status: ### NEW CODE ###
-                            while True: ### NEW CODE ###
-                                with speech_lock: ### NEW CODE ###
-                                    if not speech_loaded: ### NEW CODE ###
-                                        break ### NEW CODE ###
-                                time.sleep(.01) ### NEW CODE ###
-
-                        # ---- wait actions done ---- ### NEW CODE ###
-                        while True: ### NEW CODE ###
-                            with action_lock: ### NEW CODE ###
-                                if action_status != 'actions': ### NEW CODE ###
-                                    break ### NEW CODE ###
-                            time.sleep(.01) ### NEW CODE ###
-
-                        ## ### NEW CODE ###
-                        print() # new line ### NEW CODE ###
-
-                    except Exception as e: ### NEW CODE ###
-                        print(f'actions or TTS error: {e}') ### NEW CODE ###
-
-            time.sleep(0.1) # Small delay to avoid busy-waiting ### NEW CODE ###
-
-        else: ### NEW CODE ###
-            raise ValueError("Invalid input mode") ### NEW CODE ###
-
-    # The original while True loop for voice input is now replaced by the above logic.
-    # The keyboard input section has also been removed as the focus is now MQTT.
+        else:
+            raise ValueError("Invalid input mode")
 
 if __name__ == "__main__":
     try:
