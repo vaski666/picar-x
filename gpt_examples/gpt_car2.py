@@ -264,10 +264,10 @@ def main():
         try:
             if input_mode == 'voice':
                 my_car.set_cam_tilt_angle(DEFAULT_HEAD_TILT)
-                print("Checking for new MQTT message...") # Debug print
+                # print("Checking for new MQTT message...") # Commented out debug print
 
                 with mqtt_lock:
-                    print(f"Inside mqtt_lock - new_mqtt_message: {new_mqtt_message}, stt_text: {stt_text}") # Debug print
+                    # print(f"Inside mqtt_lock - new_mqtt_message: {new_mqtt_message}, stt_text: {stt_text}") # Commented out debug print
                     if new_mqtt_message and stt_text:
                         _result = stt_text
                         new_mqtt_message = False # Reset the flag
@@ -349,7 +349,7 @@ def main():
                                 with action_lock:
                                     if action_status != 'actions':
                                         break
-                                time.sleep(.01)
+                                    time.sleep(.01)
 
                             ##
                             print() # new line
@@ -380,5 +380,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\033[31mERROR in main execution: {e}\033[m")
     finally:
-        pass
-        
+        pass        
