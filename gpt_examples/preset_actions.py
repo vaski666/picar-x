@@ -1,7 +1,9 @@
-
 from time import sleep
 import random
 from math import sin, cos, pi
+# Importer manual_drive fra din modifiserte keyboard_control.py
+from keyboard_control import manual_drive as drive_action
+
 
 def wave_hands(car):
     car.reset()
@@ -108,28 +110,6 @@ def nod(car):
 
 
 def depressed(car):
-    # car.reset()
-    # car.set_cam_tilt_angle(0)
-    # car.set_cam_tilt_angle(20)
-    # sleep(.22)
-    # car.set_cam_tilt_angle(-30)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(15)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(-20)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(10)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(-10)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(5)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(-5)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(2)
-    # sleep(.1)
-    # car.set_cam_tilt_angle(0)
-
     car.reset()
     car.set_cam_tilt_angle(0)
     car.set_cam_tilt_angle(20)
@@ -228,7 +208,7 @@ def start_engine(music):
 
 
 actions_dict = {
-    "shake head":shake_head, 
+    "shake head":shake_head,
     "nod": nod,
     "wave hands": wave_hands,
     "resist": resist,
@@ -238,6 +218,7 @@ actions_dict = {
     "twist body": twist_body,
     "celebrate": celebrate,
     "depressed": depressed,
+    "drive": drive_action,
 }
 
 sounds_dict = {
@@ -266,7 +247,7 @@ if __name__ == "__main__":
     actions = list(actions_dict.keys())
     for i, key in enumerate(actions_dict):
         print(f'{i} {key}')
-    
+
     _sounds_num = len(sounds_dict)
     sounds = list(sounds_dict.keys())
     for i, key in enumerate(sounds_dict):
@@ -298,18 +279,6 @@ if __name__ == "__main__":
                     print(actions[key])
                     actions_dict[actions[key]](my_car)
 
-            # sleep(2)
-            # shake_head(my_car)
-            # nod(my_car)
-            # wave_hands(my_car)
-            # resist(my_car)
-            # act_cute(my_car)
-            # rub_hands(my_car)
-            # think(my_car)
-            # twist(my_car)
-            # celebrate(my_car)
-            # depressed(my_car)
-
     except KeyboardInterrupt:
         pass
     except Exception as e:
@@ -317,7 +286,3 @@ if __name__ == "__main__":
     finally:
         my_car.reset()
         sleep(.1)
-
-
-
-
