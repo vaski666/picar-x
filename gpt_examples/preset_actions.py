@@ -257,8 +257,8 @@ actions_dict = {
     "celebrate": celebrate,
     "depressed": depressed,
     "drive": drive_action,
-    "forward one second": forward_one_second,
-    "backward one second": backward_one_second,
+    "forward": forward_one_second,
+    "backward": backward_one_second,
     "turn right": turn_right,
     "turn left": turn_left,
     "take picture": take_picture, # Legg til den nye bevegelsen
